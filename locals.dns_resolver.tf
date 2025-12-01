@@ -17,13 +17,33 @@ locals {
         merge_with_module_tags       = false
       }
     }), value.private_dns_resolver.inbound_endpoints) : value.private_dns_resolver.inbound_endpoints
-    outbound_endpoints = value.private_dns_resolver.outbound_endpoints
-    tags               = coalesce(value.private_dns_resolver.tags, var.tags, {})
+    outbound_endpoints = local.private_dns_zones_enabled[key] && value.private_dns_resolver.default_outbound_endpoint_enabled ? merge(tomap({
+      dns-outbound = {
+        name                   = "dns-outbound"
+        subnet_name            = module.hub_and_spoke_vnet.virtual_networks[key].subnets["${key}-dns_resolver_outbound"].name
+        tags                   = coalesce(value.private_dns_resolver.tags, var.tags, {})
+        merge_with_module_tags = false
+        forwarding_ruleset = {
+          default = {
+            name                                        = "default-ruleset"
+            link_with_outbound_endpoint_virtual_network = true
+            tags                                        = coalesce(value.private_dns_resolver.tags, var.tags, {})
+            merge_with_module_tags                      = false
+          }
+        }
+      }
+    }), value.private_dns_resolver.outbound_endpoints) : value.private_dns_resolver.outbound_endpoints
+    tags = coalesce(value.private_dns_resolver.tags, var.tags, {})
     } if local.private_dns_resolver_enabled[key]
   }
   private_dns_resolver_ip_addresses = { for key, value in var.hub_virtual_networks : key =>
     (value.private_dns_resolver.ip_address == null ?
       cidrhost(coalesce(value.private_dns_resolver.subnet_address_prefix, local.virtual_network_subnet_default_ip_prefixes[key]["dns_resolver"]), 4) :
     value.private_dns_resolver.ip_address) if local.private_dns_resolver_enabled[key]
+  }
+  private_dns_resolver_outbound_ip_addresses = { for key, value in var.hub_virtual_networks : key =>
+    (value.private_dns_resolver.outbound_ip_address == null ?
+      cidrhost(coalesce(value.private_dns_resolver.outbound_subnet_address_prefix, local.virtual_network_subnet_default_ip_prefixes[key]["dns_resolver_outbound"]), 4) :
+    value.private_dns_resolver.outbound_ip_address) if local.private_dns_resolver_enabled[key] && value.private_dns_resolver.default_outbound_endpoint_enabled
   }
 }

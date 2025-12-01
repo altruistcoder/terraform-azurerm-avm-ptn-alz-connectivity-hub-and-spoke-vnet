@@ -678,13 +678,19 @@ variable "hub_virtual_networks" {
     }), {})
 
     private_dns_resolver = optional(object({
-      name                                   = optional(string)
-      resource_group_name                    = optional(string)
-      subnet_address_prefix                  = optional(string)
-      subnet_name                            = optional(string, "dns-resolver")
-      subnet_default_outbound_access_enabled = optional(bool, false)
-      default_inbound_endpoint_enabled       = optional(bool, true)
-      ip_address                             = optional(string, null)
+      name                                            = optional(string)
+      resource_group_name                             = optional(string)
+      coalesce                                        = optional(string)
+      subnet_name                                     = optional(string, "dns-resolver")
+      subnet_address_prefix                           = optional(string)
+      subnet_default_outbound_access_enabled          = optional(bool, false)
+      default_inbound_endpoint_enabled                = optional(bool, true)
+      ip_address                                      = optional(string, null)
+      outbound_subnet_name                            = optional(string, "dns-resolver-outbound")
+      outbound_subnet_address_prefix                  = optional(string)
+      outbound_subnet_default_outbound_access_enabled = optional(bool, false)
+      default_outbound_endpoint_enabled               = optional(bool, false)
+      outbound_ip_address                             = optional(string, null)
       inbound_endpoints = optional(map(object({
         name                         = optional(string)
         subnet_name                  = string
@@ -1163,11 +1169,16 @@ The following top level attributes are supported:
   - `name` - (Optional) The name of the DNS resolver.
   - `resource_group_name` - (Optional) The name of the resource group where the DNS resolver should be created. If not specified, uses the hub virtual network's parent resource group.
   - `enabled` - (Optional) Should the private DNS resolver be created? Default `false`.
-  - `subnet_address_prefix` - (Optional) The IPv4 address prefix to use for the DNS resolver subnet in CIDR format. Must be a part of the virtual network's address space.
-  - `subnet_name` - (Optional) The name of the DNS resolver subnet. Default `dns-resolver`.
-  - `subnet_default_outbound_access_enabled` - (Optional) Should the default outbound access be enabled for the DNS resolver subnet? Default `false`.
+  - `subnet_address_prefix` - (Optional) The IPv4 address prefix to use for the DNS resolver inbound endpoint subnet in CIDR format. Must be a part of the virtual network's address space.
+  - `subnet_name` - (Optional) The name of the DNS resolver inbound endpoint subnet. Default `dns-resolver`.
+  - `subnet_default_outbound_access_enabled` - (Optional) Should the default outbound access be enabled for the DNS resolver inbound endpoint subnet? Default `false`.
   - `default_inbound_endpoint_enabled` - (Optional) Should a default inbound endpoint be created? Default `true`.
   - `ip_address` - (Optional) The IP address for the default inbound endpoint.
+  - `outbound_subnet_name` - (Optional) The name of the DNS resolver outbound endpoint subnet. Default `dns-resolver-outbound`.
+  - `outbound_subnet_address_prefix` - (Optional) The IPv4 address prefix to use for the DNS resolver outbound endpoint subnet in CIDR format. Must be a part of the virtual network's address space.
+  - `outbound_subnet_default_outbound_access_enabled` - (Optional) Should the default outbound access be enabled for the DNS resolver outbound endpoint subnet? Default `false`.
+  - `default_outbound_endpoint_enabled` - (Optional) Should a default outbound endpoint be created with default forwarding ruleset? Default `false`.
+  - `outbound_ip_address` - (Optional) The IP address for the default outbound endpoint.
   - `inbound_endpoints` - (Optional) A map of additional inbound endpoints. Each endpoint is an object with:
     - `name` - (Optional) The endpoint name.
     - `subnet_name` - The subnet name for the endpoint (required).
@@ -1175,7 +1186,7 @@ The following top level attributes are supported:
     - `private_ip_address` - (Optional) The private IP address (required if allocation method is `Static`).
     - `tags` - (Optional) A map of tags.
     - `merge_with_module_tags` - (Optional) Should the tags be merged with module-level tags? Default `true`.
-  - `outbound_endpoints` - (Optional) A map of outbound endpoints. Each endpoint is an object with:
+  - `outbound_endpoints` - (Optional) A map of additional outbound endpoints. Each endpoint is an object with:
     - `name` - (Optional) The endpoint name.
     - `subnet_name` - The subnet name for the endpoint (required).
     - `tags` - (Optional) A map of tags.

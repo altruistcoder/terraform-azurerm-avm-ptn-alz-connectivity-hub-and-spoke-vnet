@@ -41,5 +41,23 @@ locals {
       default_outbound_access_enabled = value.private_dns_resolver.subnet_default_outbound_access_enabled
     } } if local.private_dns_resolver_enabled[key] && value.private_dns_resolver.default_inbound_endpoint_enabled
   }
-  subnets = { for key, value in var.hub_virtual_networks : key => merge(lookup(local.private_dns_resolver_subnets, key, {}), lookup(local.bastion_subnets, key, {}), lookup(local.gateway_subnets, key, {})) }
+  private_dns_resolver_outbound_subnets = { for key, value in var.hub_virtual_networks : key => {
+    dns_resolver_outbound = {
+      hub_network_key  = key
+      address_prefixes = [coalesce(value.private_dns_resolver.outbound_subnet_address_prefix, local.virtual_network_subnet_default_ip_prefixes[key]["dns_resolver_outbound"])]
+      name             = value.private_dns_resolver.outbound_subnet_name
+      route_table = {
+        id                           = null
+        assign_generated_route_table = false
+      }
+      delegations = [{
+        name = "Microsoft.Network.dnsResolvers"
+        service_delegation = {
+          name = "Microsoft.Network/dnsResolvers"
+        }
+      }]
+      default_outbound_access_enabled = value.private_dns_resolver.outbound_subnet_default_outbound_access_enabled
+    } } if local.private_dns_resolver_enabled[key] && value.private_dns_resolver.default_outbound_endpoint_enabled
+  }
+  subnets = { for key, value in var.hub_virtual_networks : key => merge(lookup(local.private_dns_resolver_subnets, key, {}), lookup(local.private_dns_resolver_outbound_subnets, key, {}), lookup(local.bastion_subnets, key, {}), lookup(local.gateway_subnets, key, {})) }
 }

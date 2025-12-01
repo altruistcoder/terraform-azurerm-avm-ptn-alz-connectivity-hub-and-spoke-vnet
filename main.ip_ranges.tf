@@ -1,11 +1,12 @@
 locals {
   virtual_network_default_ip_prefix_size = 22
   virtual_network_subnet_default_ip_prefix_sizes = {
-    bastion             = 26
-    firewall            = 26
-    firewall_management = 26
-    gateway             = 27
-    dns_resolver        = 28
+    bastion               = 26
+    firewall              = 26
+    firewall_management   = 26
+    gateway               = 27
+    dns_resolver          = 28
+    dns_resolver_outbound = 28
   }
 }
 
