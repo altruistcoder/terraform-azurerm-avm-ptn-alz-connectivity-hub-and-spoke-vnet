@@ -24,7 +24,7 @@ locals {
         tags                   = coalesce(value.private_dns_resolver.tags, var.tags, {})
         merge_with_module_tags = false
         forwarding_ruleset = {
-          default = {
+          "default" = {
             name                                        = "default-ruleset"
             link_with_outbound_endpoint_virtual_network = true
             tags                                        = coalesce(value.private_dns_resolver.tags, var.tags, {})
