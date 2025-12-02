@@ -18,17 +18,19 @@ locals {
       }
     }), value.private_dns_resolver.inbound_endpoints) : value.private_dns_resolver.inbound_endpoints
     outbound_endpoints = local.private_dns_zones_enabled[key] && value.private_dns_resolver.default_outbound_endpoint_enabled ? merge(tomap({
-      dns-outbound = {
+      "dns-outbound" = {
         name                   = "dns-outbound"
         subnet_name            = module.hub_and_spoke_vnet.virtual_networks[key].subnets["${key}-dns_resolver_outbound"].name
         tags                   = coalesce(value.private_dns_resolver.tags, var.tags, {})
         merge_with_module_tags = false
         forwarding_ruleset = {
-          "default" = {
+          "default-outbound-ruleset" = {
             name                                        = "default-ruleset"
             link_with_outbound_endpoint_virtual_network = true
             tags                                        = coalesce(value.private_dns_resolver.tags, var.tags, {})
             merge_with_module_tags                      = false
+            additional_virtual_network_links            = {}
+            rules = {}
           }
         }
       }
