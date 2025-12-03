@@ -680,7 +680,6 @@ variable "hub_virtual_networks" {
     private_dns_resolver = optional(object({
       name                                            = optional(string)
       resource_group_name                             = optional(string)
-      coalesce                                        = optional(string)
       subnet_name                                     = optional(string, "dns-resolver")
       subnet_address_prefix                           = optional(string)
       subnet_default_outbound_access_enabled          = optional(bool, false)
